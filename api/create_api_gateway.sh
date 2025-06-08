@@ -3,7 +3,7 @@
 API_ID=$(aws apigatewayv2 create-api \
   --name FileUploadAPI \
   --protocol-type HTTP \
-  --target arn:aws:lambda:us-east-1:YOUR_ACCOUNT_ID:function:uploadHandler \
+  --target arn:aws:lambda:us-east-1:535002879962:function:uploadHandler \
   --region us-east-1 \
   --query 'ApiId' --output text)
 
@@ -14,7 +14,7 @@ aws lambda add-permission \
   --statement-id apigateway-test-2 \
   --action lambda:InvokeFunction \
   --principal apigateway.amazonaws.com \
-  --source-arn "arn:aws:execute-api:us-east-1:YOUR_ACCOUNT_ID:$API_ID/*/*/" \
+  --source-arn "arn:aws:execute-api:us-east-1:535002879962:$API_ID/*/*/" \
   --region us-east-1
 
 echo "Invoke URL: https://$API_ID.execute-api.us-east-1.amazonaws.com/"
