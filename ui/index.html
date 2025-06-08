@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Lambda File Upload</title>
+</head>
+<body>
+  <h2>Upload File to Lambda</h2>
+  <input type="file" id="fileInput" />
+  <button onclick="uploadFile()">Upload</button>
+  <p id="response"></p>
+
+  <script>
+    async function uploadFile() {
+      const fileInput = document.getElementById("fileInput");
+      const file = fileInput.files[0];
+      if (!file) return alert("Please select a file.");
+
+      const arrayBuffer = await file.arrayBuffer();
+      const base64Data = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+
+      const res = await fetch("https://YOUR_API_ID.execute-api.us-east-1.amazonaws.com/", {
+        method: "POST",
+        headers: { "Content-Type": "application/octet-stream" },
+        body: base64Data,
+      });
+
+      const data = await res.json();
+      document.getElementById("response").innerText = data.message || data.error;
+    }
+  </script>
+</body>
+</html>
