@@ -1,3 +1,8 @@
+```
+sed -i 's/\r$//' deploy.sh
+chmod +x deploy.sh
+
+```
 # Lambda File Upload System with Web UI
 
 This project demonstrates how to upload files via a web interface directly to an AWS Lambda function using API Gateway. The web UI is hosted on S3 as a static website.
@@ -222,4 +227,5 @@ echo "Website URL: http://$BUCKET_NAME.s3-website-us-east-1.amazonaws.com"
 ---
 
 Would you like a ZIP file of this project or a GitHub-ready structure?
+
 
