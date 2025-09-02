@@ -1,6 +1,19 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# ----- Pre-requisites -----
+# Detect Amazon Linux version and install zip if missing
+if ! command -v zip >/dev/null 2>&1; then
+  if [ -f /etc/os-release ]; then
+    . /etc/os-release
+    case "$VERSION_ID" in
+      2) sudo yum install -y zip ;;     # Amazon Linux 2
+      2023) sudo dnf install -y zip ;;  # Amazon Linux 2023
+      *) echo "Unknown Amazon Linux version: $VERSION_ID" && exit 1 ;;
+    esac
+  fi
+fi
+
 # ----- Config -----
 REGION="${REGION:-us-east-1}"
 FUNCTION_NAME="${FUNCTION_NAME:-uploadHandler}"
@@ -25,12 +38,13 @@ if ! aws iam get-role --role-name "${ROLE_NAME}" >/dev/null 2>&1; then
         "Action": "sts:AssumeRole"
       }]
     }' >/dev/null
-  # Basic logging permissions
+
+  # Attach basic logging permissions
   aws iam attach-role-policy \
     --role-name "${ROLE_NAME}" \
     --policy-arn arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
-  # Let IAM propagate
-  echo "Waiting for IAM role to become usable..."
+
+  echo "Waiting for IAM role to propagate..."
   sleep 12
 else
   echo "IAM role ${ROLE_NAME} already exists."
@@ -40,12 +54,7 @@ ROLE_ARN="$(aws iam get-role --role-name "${ROLE_NAME}" --query 'Role.Arn' --out
 echo "Using role ARN: ${ROLE_ARN}"
 
 # ----- Create or update function -----
-set +e
-aws lambda get-function --function-name "${FUNCTION_NAME}" --region "${REGION}" >/dev/null 2>&1
-exists=$?
-set -e
-
-if [ "${exists}" -ne 0 ]; then
+if ! aws lambda get-function --function-name "${FUNCTION_NAME}" --region "${REGION}" >/dev/null 2>&1; then
   echo "Creating Lambda function ${FUNCTION_NAME} in ${REGION}..."
   aws lambda create-function \
     --function-name "${FUNCTION_NAME}" \
@@ -66,6 +75,6 @@ else
   echo "Updated code."
 fi
 
-echo "Done."
-echo "Tip: invoke test event ->"
+echo "✅ Done."
+echo "Test with:"
 echo "aws lambda invoke --function-name ${FUNCTION_NAME} --region ${REGION} out.json && cat out.json && echo"
